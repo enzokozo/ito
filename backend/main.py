@@ -24,6 +24,7 @@ class ConnectionManager:
     def disconnect(self, player_name : str):
         if player_name in self.active_connections:
             del self.active_connections[player_name]
+            game.remove_player(player_name)
 
     # Envia mensagem para um jogador específico
     async def send_personal_message(self, message: dict, player_name: str):
@@ -86,8 +87,7 @@ async def websocket_endpoint(websocket: WebSocket, player_name: str):
 
             # Se a ação for o botão de Iniciar o jogo:
             elif parsed_data["action"] == "start_game":
-                theme = parsed_data.get("theme", "Tema Livre")
-                success, msg = game.start_round(theme)
+                success, msg = game.start_round()
 
                 await manager.broadcast({"type": "chat", "message": msg})
                 if success:

@@ -14,7 +14,35 @@ class ItoGame:
         # Cartas que foram jogadas na rodada
         self.played_cards = []
 
+        # Indica se a rodada já começou ou não
         self.is_started = False
+
+        # Lista de cores padrão do Ito
+        self.available_colors = [
+            {"name": "Preto", "hex": "#000000"},
+            {"name": "Amarelo", "hex": "#FFD700"},
+            {"name": "Verde", "hex": "#28A745"},
+            {"name": "Roxo", "hex": "#6F42C1"},
+            {"name": "Rosa", "hex": "#E83E8C"},
+            {"name": "Azul", "hex": "#007BFF"},            
+            {"name": "Branco", "hex": "#FFFFFF"},
+            {"name": "Vermelho", "hex": "#DC3545"}
+        ]
+
+        # Dicionário para guardar as cores escolhidas pelos jogadores
+        self.player_colors = {}
+
+        # Temas padrão para o sorteio
+        self.theme_deck = [
+            "O que você levaria para um apocalipse zumbi?",
+            "Profissões mais difíceis ou estressantes",
+            "Coisas que dão muito medo",
+            "Animais mais perigosos do mundo",
+            "Melhores comidas para comer no final de semana",
+            "Piores presentes para se ganhar de aniversário",
+            "Superpoderes mais úteis na vida real",
+            "Melhores invenções da humanidade"         
+        ]
 
     def add_player(self, player_name:str):
         """
@@ -22,20 +50,42 @@ class ItoGame:
         """
 
         if not self.is_started and player_name not in self.players:
-            # O valor None significa que o jogador ainda não recebeu uma carta
-            self.players[player_name] = None
+            if not self.available_colors:
+                return False  # Não há mais cores disponíveis
+            
+            self.players[player_name] = None  # O valor None significa que o jogador ainda não recebeu uma carta
+           
+            # Escolhe uma cor, atribui ao jogador e remove da lista de cores disponíveis
+            chosen_color = random.choice(self.available_colors)
+            self.available_colors.remove(chosen_color)
+            self.player_colors[player_name] = chosen_color
+
             return True
         return False
     
-    def start_round(self, theme: str):
+    def remove_player(self, player_name: str):
         """
-        Inicia uma nova rodada, embaralha as cartas e dá 1 carta para cada jogador.
+        Remove um jogador do jogo e devolve a cor dele para a lista de cores disponíveis.
+        """
+
+        # Verifica se o jogador existe no jogo antes de tentar remover
+        if player_name in self.players:
+            del self.players[player_name]
+
+            # Devolve a cor para a lista de cores disponíveis
+            if player_name in self.player_colors:
+                freed_color = self.player_colors.pop(player_name)
+                self.available_colors.append(freed_color)
+    
+    def start_round(self):
+        """
+        Inicia uma nova rodada e sorteia o tema automaticamente.
         """
         if len(self.players) < 2:
             return False, "Faltam jogadores para começar"
         
         self.is_started = True
-        self.theme = theme
+        self.theme = random.choice(self.theme_deck)
         self.played_cards = []
 
         # Re-cria e embaralha o deck
@@ -54,6 +104,7 @@ class ItoGame:
         """
         return {
             "players": list(self.players.keys()),
+            "players_colors": self.player_colors,
             "played_cards": self.played_cards,
             "theme": self.theme,
             "is_started": self.is_started
